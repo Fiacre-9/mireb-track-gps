@@ -3,8 +3,8 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 // Toute donnée venant de la base est échappée avant d'entrer dans le HTML
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const state = { user: null, company: sessionStorage.getItem('tf_company'), vehicles: new Map(), selected: null, unread: 0, es: null, tab: null, fences: [] };
-const ALERT_ICONS = { offline: '📡', online: '🟢', acc_off: '🔑', overspeed: '🚨', low_fuel: '⛽', geofence_enter: '📥', geofence_exit: '📤', geofence_speed: '🐢', cut: '✂️', restore: '🔌' };
+const state = { user: null, company: sessionStorage.getItem('tf_company'), vehicles: new Map(), selected: null, cmds: {}, unread: 0, es: null, tab: null, fences: [] };
+const ALERT_ICONS = { offline: '📡', online: '🟢', acc_off: '🔑', overspeed: '🚨', low_fuel: '⛽', geofence_enter: '📥', geofence_exit: '📤', geofence_speed: '🐢', cut: '✂️', restore: '🔌', sos: '🆘', power_cut: '🔋', low_battery: '🪫', tamper: '⚠️' };
 const locale = () => (LANG === 'fr' ? 'fr-FR' : 'en-GB');
 const fmtTime = (ms) => (ms ? new Date(ms).toLocaleString(locale()) : t('never'));
 const hasCompany = () => state.user.role !== 'super_admin' || !!state.company;
@@ -152,6 +152,12 @@ function connectSSE() {
     if (state.tab === 'monitor') renderList();
     if (v.id === state.selected) renderDetailInfo();
   });
+  es.addEventListener('command', (e) => {
+    const c = JSON.parse(e.data);
+    state.cmds[c.vehicle_id] = c;
+    if (c.vehicle_id === state.selected) renderDetailInfo();
+    if (['confirmed', 'failed', 'timeout'].includes(c.status)) toast(`${t('cmd_' + c.command)} : ${t('cmd_' + c.status)}`, c.status !== 'confirmed');
+  });
   es.addEventListener('alert', () => {
     if (state.tab === 'alerts') guard(loadAlerts)();
     else { state.unread++; $('#badge').textContent = state.unread; $('#badge').classList.remove('hidden'); }
@@ -174,15 +180,17 @@ function select(id, pan) {
     <div id="dReplay" class="replay hidden"></div>`;
   renderDetailInfo();
   renderList();
+  api(`/vehicles/${id}/commands`).then((l) => { if (l[0]) { state.cmds[id] = { vehicle_id: id, command: l[0].command, status: l[0].status }; if (state.selected === id) renderDetailInfo(); } }).catch(() => {});
 }
 function renderDetailInfo() {
   const v = state.vehicles.get(state.selected); if (!v || !$('#dInfo')) return;
   $('#dTitle').textContent = `${v.name}${v.plate ? ' · ' + v.plate : ''}`;
+  const lc = state.cmds[v.id];
   const cmd = isAdmin() ? (v.cut ? `<button class="act" data-act="cmd" data-c="restore">🔌 ${esc(t('restore'))}</button>` : `<button class="act danger" data-act="cmd" data-c="cut">✂️ ${esc(t('cut'))}</button>`) : '';
   $('#dInfo').innerHTML = `<div class="grid"><div><b>${v.speed} km/h</b>${esc(t('speed'))}</div><div><b>${v.fuel != null ? Math.round(v.fuel) + '%' : '—'}</b>${esc(t('fuel'))}</div>
     <div><b>${v.temp != null ? Math.round(v.temp) + '°C' : '—'}</b>${esc(t('temp'))}</div><div><b>${v.acc ? 'ON' : 'OFF'}</b>${esc(t('ignition'))}</div></div>
     <div class="grid"><div><b>${v.online ? esc(t('online')) : esc(t('offline'))}</b>${esc(t('state'))}</div><div><b>${v.cut ? esc(t('cutState')) : esc(t('normal'))}</b>${esc(t('fuel'))}</div>
-    <div><b>${fmtTime(v.last_update)}</b>${esc(t('lastSignal'))}</div><div>${cmd}</div></div>`;
+    <div><b>${fmtTime(v.last_update)}</b>${esc(t('lastSignal'))}</div><div>${cmd}</div></div>${lc ? `<p class="hint">${esc(t('lastCmd'))} : ${esc(t('cmd_' + lc.command))} — ${esc(t('cmd_' + lc.status))}</p>` : ''}`;
 }
 
 // ---- Historique + relecture ----
@@ -377,7 +385,8 @@ document.addEventListener('click', guard(async (e) => {
     case 'cmd': {
       const v = state.vehicles.get(state.selected);
       if (b.dataset.c === 'cut' && !confirm(`${t('confirmCut')} ${v.name} ?`)) return;
-      await api(`/vehicles/${v.id}/command`, { method: 'POST', body: { command: b.dataset.c } });
+      const r = await api(`/vehicles/${v.id}/command`, { method: 'POST', body: { command: b.dataset.c } });
+      state.cmds[v.id] = { vehicle_id: v.id, command: b.dataset.c, status: r.status }; renderDetailInfo();
       break;
     }
     case 'zDel': if (confirm(t('confirmDelete'))) { await api('/geofences/' + id, { method: 'DELETE' }); await loadFences(); } break;

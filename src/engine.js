@@ -10,6 +10,7 @@ const fenceCache = new Map();   // cid -> { t, list }
 const insideState = new Map();  // vehicleId -> Set(fenceId)
 const lastAlert = new Map();    // "vehicleId:type" -> t
 const lastStored = new Map();   // vehicleId -> { lat, lng, t }
+const lastPosT = new Map();     // vehicleId -> heure (boîtier) de la dernière position acceptée
 
 async function getFences(cid) {
   const c = fenceCache.get(cid);
@@ -43,7 +44,16 @@ async function addAlert(v, type, detail, force) {
 async function processPosition(v, p) {
   const t = p.t || Date.now();
   const speed = Math.max(0, Math.round(p.speed || 0));
-  const acc = p.acc === undefined || p.acc === null ? (speed > 0 ? 1 : v.acc) : (p.acc ? 1 : 0);
+
+  // Position tamponnée par le boîtier et reçue en retard : on la garde dans l'historique sans toucher à l'état courant
+  const lp = lastPosT.get(v.id);
+  if (lp && t < lp - 1000) {
+    await db.run('INSERT INTO positions (vehicle_id, lat, lng, speed, t) VALUES (?,?,?,?,?)', [v.id, p.lat, p.lng, speed, t]);
+    return v;
+  }
+  lastPosT.set(v.id, t);
+
+  const acc =p.acc === undefined || p.acc === null ? (speed > 0 ? 1 : v.acc) : (p.acc ? 1 : 0);
   const fuel = p.fuel ?? v.fuel;
   const temp = p.temp ?? v.temp;
   const heading = Math.round(p.heading ?? v.heading ?? 0);
@@ -82,11 +92,9 @@ async function processPosition(v, p) {
       set.delete(g.id);
       if (known && g.on_exit) await addAlert(next, 'geofence_exit', `Sortie de « ${g.name} »`, true);
       if (known && g.cut_on_exit && !next.cut) {
-        next.cut = 1;
-        await db.run('UPDATE vehicles SET cut=1 WHERE id=?', [v.id]);
-        await db.run('INSERT INTO commands (company_id, vehicle_id, user_id, command, status, t) VALUES (?,?,?,?,?,?)',
-          [v.company_id, v.id, null, 'cut', 'auto', t]);
-        await addAlert(next, 'cut', `Coupure automatique (sortie de « ${g.name} »)`, true);
+        // Passe par la file de commandes : envoi réel au boîtier, différé jusqu'à l'arrêt du véhicule
+        const r = await require('./commands').request(next, 'cut', null, 'auto', `sortie de « ${g.name} »`);
+        if (r.status === 'confirmed') next.cut = 1;
       }
     }
     if (inside && g.speed_limit && speed > g.speed_limit)
@@ -98,8 +106,33 @@ async function processPosition(v, p) {
   return next;
 }
 
+const ALARM_TEXT = {
+  sos: 'Bouton SOS pressé', power_cut: 'Alimentation du boîtier coupée', vibration: 'Vibration anormale détectée',
+  low_battery: 'Batterie faible', tamper: 'Boîtier démonté'
+};
+
+// Battement de coeur / état du boîtier (sans position) : en ligne, contact, état de coupure, alarmes
+async function processStatus(v, s) {
+  const t = Date.now();
+  const acc = s.acc === undefined ? v.acc : (s.acc ? 1 : 0);
+  const cut = s.cut === undefined ? v.cut : (s.cut ? 1 : 0);
+  const speed = acc ? v.speed : 0;
+  const next = { ...v, acc, cut, speed, online: 1, last_update: t };
+  await db.run('UPDATE vehicles SET acc=?, cut=?, speed=?, online=1, last_update=? WHERE id=?', [acc, cut, speed, t, v.id]);
+
+  if (!v.online && v.last_update) await addAlert(next, 'online', 'Appareil de nouveau en ligne');
+  if (v.acc && !acc) await addAlert(next, 'acc_off', 'Contact coupé');
+  if (v.cut !== cut) await addAlert(next, cut ? 'cut' : 'restore', 'Changement d\'état détecté sur le boîtier', true);
+  if (s.alarm) await addAlert(next, s.alarm, ALARM_TEXT[s.alarm] || s.alarm);
+  if (s.voltage !== undefined && s.voltage <= 2 && s.alarm !== 'low_battery') await addAlert(next, 'low_battery', `Batterie faible (niveau ${s.voltage}/6)`);
+
+  hub.emit(v.company_id, 'vehicle', pub(next));
+  return next;
+}
+
 // Détection des appareils hors ligne + purge de l'historique ancien
 async function maintenance() {
+  await require('./commands').expire();
   const stale = await db.all('SELECT * FROM vehicles WHERE online = 1 AND last_update < ?', [Date.now() - OFFLINE_MS]);
   for (const v of stale) {
     await db.run('UPDATE vehicles SET online=0, speed=0 WHERE id=?', [v.id]);
@@ -115,4 +148,4 @@ function startMaintenance() {
   setInterval(purge, 6 * 3600000).unref();
 }
 
-module.exports = { processPosition, addAlert, invalidateFences, pub, startMaintenance };
+module.exports = { processPosition, processStatus, addAlert, invalidateFences, pub, startMaintenance };

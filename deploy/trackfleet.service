@@ -1,0 +1,22 @@
+# Service systemd pour un VPS (Ubuntu/Debian).
+#   sudo cp deploy/trackfleet.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now trackfleet
+# Les variables se mettent dans /opt/trackfleet/.env (voir .env.example), avec GT06_PORT=5023.
+[Unit]
+Description=TrackFleet (web + serveur GT06)
+After=network.target mysql.service
+
+[Service]
+WorkingDirectory=/opt/trackfleet
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+User=trackfleet
+Environment=NODE_ENV=production
+# Autorise l'écoute sur un port bas si besoin, sans lancer le service en root
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

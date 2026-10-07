@@ -4,6 +4,7 @@ const db = require('../db');
 const A = require('../auth');
 const hub = require('../hub');
 const engine = require('../engine');
+const commands = require('../commands');
 const { computeStats } = require('../reports');
 const { num, str, newToken, asyncH } = require('../util');
 
@@ -125,20 +126,17 @@ r.delete('/geofences/:id', CA, A.needCompany, asyncH(async (req, res) => {
 }));
 
 // ---- Télécommande ----
-// Enregistre la commande et l'état demandé. L'exécution réelle sur un boîtier dépend de son protocole
-// (couche TCP à ajouter sur un VPS) ; avec le simulateur, la commande est appliquée immédiatement.
+// Passe par la file de commandes (src/commands.js) : envoi au boîtier connecté en TCP, attente de son accusé.
 r.post('/vehicles/:id/command', CA, A.needCompany, asyncH(async (req, res) => {
   const v = await ownVehicle(req, res); if (!v) return;
   const c = req.body.command;
   if (!['cut', 'restore'].includes(c)) return res.status(400).json({ error: 'Commande inconnue (cut | restore)' });
-  const cut = c === 'cut' ? 1 : 0;
-  await db.run('UPDATE vehicles SET cut = ? WHERE id = ?', [cut, v.id]);
-  await db.run('INSERT INTO commands (company_id, vehicle_id, user_id, command, status, t) VALUES (?,?,?,?,?,?)',
-    [req.cid, v.id, req.user.id, c, 'sent', Date.now()]);
-  const next = { ...v, cut };
-  await engine.addAlert(next, c, c === 'cut' ? `Coupure envoyée par ${req.user.name}` : `Rétablissement envoyé par ${req.user.name}`, true);
-  require('../hub').emit(req.cid, 'vehicle', engine.pub(next));
-  res.json({ ok: true });
+  try { res.json(await commands.request(v, c, req.user, 'user')); }
+  catch (e) { if (e.status) return res.status(e.status).json({ error: e.message }); throw e; }
+}));
+r.get('/vehicles/:id/commands', A.needCompany, asyncH(async (req, res) => {
+  const v = await ownVehicle(req, res); if (!v) return;
+  res.json(await db.all('SELECT id, command, status, t FROM commands WHERE vehicle_id = ? ORDER BY id DESC LIMIT 5', [v.id]));
 }));
 
 module.exports = r;

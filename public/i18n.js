@@ -27,7 +27,11 @@ const I18N = {
     password8: 'Mot de passe (8+ caractères)', keepPw: 'laisser vide pour ne pas changer', never: '—', copy: 'Copier', copied: 'Copié',
     a_offline: 'Hors ligne', a_online: 'De nouveau en ligne', a_acc_off: 'Contact coupé', a_overspeed: 'Excès de vitesse', a_low_fuel: 'Carburant bas',
     a_geofence_enter: 'Entrée dans une zone', a_geofence_exit: 'Sortie de zone', a_geofence_speed: 'Vitesse en zone',
-    a_cut: 'Coupure carburant', a_restore: 'Rétablissement', km: 'km'
+    a_cut: 'Coupure carburant', a_restore: 'Rétablissement', km: 'km',
+    a_sos: 'Bouton SOS', a_power_cut: 'Alimentation coupée', a_low_battery: 'Batterie faible', a_tamper: 'Boîtier démonté',
+    lastCmd: 'Dernière commande', cmd_cut: 'Coupure', cmd_restore: 'Rétablissement',
+    cmd_pending: 'en attente (envoi dès que possible)', cmd_sent: 'envoyée, attente de la réponse du boîtier', cmd_confirmed: 'confirmée par le boîtier',
+    cmd_failed: 'refusée par le boîtier', cmd_timeout: 'sans réponse du boîtier', cmd_expired: 'expirée'
   },
   en: {
     app: 'TrackFleet', login: 'Sign in', email: 'Email', password: 'Password', signin: 'Sign in',
@@ -56,7 +60,11 @@ const I18N = {
     password8: 'Password (8+ characters)', keepPw: 'leave empty to keep', never: '—', copy: 'Copy', copied: 'Copied',
     a_offline: 'Offline', a_online: 'Back online', a_acc_off: 'Ignition off', a_overspeed: 'Overspeed', a_low_fuel: 'Low fuel',
     a_geofence_enter: 'Zone entry', a_geofence_exit: 'Zone exit', a_geofence_speed: 'Speed in zone',
-    a_cut: 'Fuel cut', a_restore: 'Restored', km: 'km'
+    a_cut: 'Fuel cut', a_restore: 'Restored', km: 'km',
+    a_sos: 'SOS button', a_power_cut: 'Power cut', a_low_battery: 'Low battery', a_tamper: 'Device removed',
+    lastCmd: 'Last command', cmd_cut: 'Cut', cmd_restore: 'Restore',
+    cmd_pending: 'pending (sent as soon as possible)', cmd_sent: 'sent, waiting for the device reply', cmd_confirmed: 'confirmed by the device',
+    cmd_failed: 'rejected by the device', cmd_timeout: 'no reply from the device', cmd_expired: 'expired'
   }
 };
 let LANG = localStorage.getItem('tf_lang') || ((navigator.language || 'fr').startsWith('en') ? 'en' : 'fr');

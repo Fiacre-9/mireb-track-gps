@@ -45,5 +45,7 @@ const PORT = process.env.PORT || 3000;
   await require('./src/seed').seed();
   engine.startMaintenance();
   if (process.env.SIMULATOR === '1') require('./src/simulator').start();
+  // Boîtiers GT06 en TCP : uniquement sur un VPS (port TCP ouvert au pare-feu)
+  if (process.env.GT06_PORT) require('./src/tcp/server').start(+process.env.GT06_PORT, process.env.GT06_HOST || '0.0.0.0');
   app.listen(PORT, () => console.log(`TrackFleet : http://localhost:${PORT} (base ${db.client})`));
 })().catch((e) => { console.error('Démarrage impossible :', e.message); process.exit(1); });

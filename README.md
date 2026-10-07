@@ -13,7 +13,7 @@ Node.js + Express + MySQL, interface en français et en anglais.
 | Géoclôtures | Zones circulaires, alerte entrée/sortie, limite de vitesse, coupure carburant automatique à la sortie |
 | Historique | Trajets stockés en base, relecture animée (jour, hier, 7 jours) |
 | Rapports | Kilométrage, vitesse moyenne et maximale, temps de conduite, trajets, alertes, impression |
-| Télécommande | Coupure / rétablissement (voir « Limites ») |
+| Télécommande | Coupure / rétablissement envoyés au boîtier, avec accusé et garde-fou de vitesse |
 | Comptes | Super admin → entreprises (suspension possible) → administrateurs d'entreprise → lecteurs |
 | Marque | Nom, couleur et logo par entreprise |
 | Sécurité | Mots de passe bcrypt, cookie de session HttpOnly, protection CSRF, limiteur de connexion, CSP, isolation stricte par entreprise |
@@ -52,13 +52,39 @@ Onglet **Véhicules → Connexion** : l'application affiche l'URL et l'identifia
 - **Boîtiers 4G configurables en HTTP** : requête `GET/POST /api/ingest/osmand` avec `id`, `token`, `lat`, `lon`,
   et en option `speed` (nœuds, ou km/h avec `unit=kmh`), `bearing`, `timestamp`, `ignition`, `fuel`, `temp`.
 
-## Limites actuelles (à traiter dans les prochaines étapes)
+## Boîtiers GPS GT06 (TCP) sur un VPS
 
-- **Boîtiers GPS classiques (GT06, JT808, etc.)** : ils parlent en TCP, ce qui n'est pas possible sur l'hébergement
-  Node.js mutualisé d'Hostinger. Il faut un VPS et un décodeur de protocole (module à ajouter).
-- **Télécommande** : la commande est enregistrée et l'état « coupé » est mémorisé ; l'envoi réel au boîtier dépend
-  de son protocole (même module TCP). Avec le simulateur, la coupure est appliquée immédiatement.
+Le serveur sait parler le protocole **GT06** (Concox et de nombreux clones) : login par IMEI, positions (0x12 / 0x22),
+battement de coeur, alarmes (SOS, coupure d'alimentation, vibration, batterie faible, démontage) et commandes.
+Il démarre quand `GT06_PORT` est défini (ex. `5023`).
+
+1. **VPS** (Ubuntu/Debian) : installer Node 20+, cloner le dépôt dans `/opt/trackfleet`, `npm install`, créer `.env`
+   (MySQL local ou distant, `JWT_SECRET`, `GT06_PORT=5023`), puis installer `deploy/trackfleet.service`.
+2. **Pare-feu** : ouvrir le port TCP 5023 ; mettre Nginx + HTTPS devant le port web (3000).
+3. **Véhicule** : onglet Véhicules → saisir l'**IMEI à 15 chiffres** du boîtier comme identifiant.
+4. **Boîtier** : par SMS, pointer vers le serveur et régler l'APN de la carte SIM. Pour la plupart des GT06 :
+   `APN,<apn>#` puis `SERVER,1,<domaine>,5023,0#` (ou `SERVER,0,<ip>,5023,0#`). Les commandes varient selon le modèle : vérifiez le manuel.
+5. **Test sans matériel** : `node scripts/gt06-sim.js <hôte> 5023 <imei> 0` simule un boîtier (positions, battements, réponse aux coupures).
+
+### Télécommande réelle
+
+- Le bouton « Couper le carburant » met la commande en file ; elle part vers le boîtier connecté, et le véhicule n'est
+  affiché « COUPÉ » qu'**après l'accusé du boîtier** (ou si son état réel le confirme au battement de coeur).
+- **Sécurité** : une coupure demandée par un utilisateur est **refusée au-dessus de 20 km/h** (`CUT_MAX_SPEED`) ; une coupure
+  automatique (sortie de géoclôture) est **différée jusqu'à l'arrêt du véhicule**. Une commande en attente expire après 1 h.
+- Commandes par défaut : `DYD,000000#` (coupure) et `HFYD,000000#` (rétablissement), modifiables par variables d'environnement.
+
+### Tests
+
+`npm test` : 12 tests (décodeur, CRC vérifié sur les trames de la documentation GT06, serveur TCP avec faux boîtier, file de commandes).
+
+## Limites actuelles
+
+- **Pas de test sur matériel réel** : le décodeur est validé contre la documentation et un faux boîtier, pas contre un boîtier physique.
+  Faites un premier essai avec un seul véhicule avant de déployer la flotte.
+- **GT06 uniquement** (JT808 et autres protocoles : modules à ajouter). Le protocole GT06 n'a pas de mot de passe :
+  l'IMEI sert d'identifiant, donc ne le divulguez pas et filtrez le port TCP si votre opérateur le permet.
+- **Hébergement mutualisé Hostinger** : pas de TCP entrant, donc uniquement la réception HTTP (Traccar Client, boîtiers HTTP).
 - **Vidéo en direct** : non incluse.
-- **Géoclôtures** : cercles uniquement (polygones à venir).
-- Le test automatisé du chemin MySQL n'a pas pu être fait dans l'environnement de développement (SQLite utilisé) :
-  vérifier le premier démarrage sur Hostinger avec la base vide.
+- **Géoclôtures** : cercles uniquement.
+- Le chemin MySQL n'a pas pu être testé automatiquement ici (SQLite utilisé) : vérifier le premier démarrage sur la base vide.
