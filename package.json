@@ -1,0 +1,19 @@
+{
+  "name": "trackfleet",
+  "version": "0.2.0",
+  "description": "Plateforme de suivi GPS et gestion de flotte (Node.js, Express, MySQL)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "DB_CLIENT=sqlite DEMO=1 SIMULATOR=1 JWT_SECRET=dev-secret-dev-secret COOKIE_SECURE=0 node server.js"
+  },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "leaflet": "^1.9.4",
+    "mysql2": "^3.11.0"
+  }
+}
