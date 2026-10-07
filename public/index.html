@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrackFleet</title>
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand"><img id="logo" class="hidden" alt=""><span id="brandName">📍 TrackFleet</span></div>
+  <nav id="nav">
+    <button class="tab" data-tab="monitor" data-i18n="monitor"></button>
+    <button class="tab" data-tab="alerts"><span data-i18n="alerts"></span> <span id="badge" class="badge hidden">0</span></button>
+    <button class="tab" data-tab="zones" data-i18n="zones"></button>
+    <button class="tab" data-tab="reports" data-i18n="reports"></button>
+    <button class="tab" data-tab="vehicles" data-roles="super_admin company_admin" data-i18n="vehicles"></button>
+    <button class="tab" data-tab="users" data-roles="super_admin company_admin" data-i18n="users"></button>
+    <button class="tab" data-tab="companies" data-roles="super_admin" data-i18n="companies"></button>
+    <button class="tab" data-tab="account" data-i18n="account"></button>
+  </nav>
+  <select id="companySel" class="hidden" aria-label="Entreprise"></select>
+  <div id="conn" class="conn off">●</div>
+  <button id="logout" class="act" data-i18n="logout"></button>
+</header>
+<div id="toast" class="toast hidden"></div>
+
+<main>
+  <section id="monitor" class="panel">
+    <aside class="side">
+      <input id="search" data-i18n-ph="search">
+      <div class="stats" id="stats"></div>
+      <ul id="vlist"></ul>
+    </aside>
+    <div class="mapwrap">
+      <div id="map"></div>
+      <div id="detail" class="detail hidden"></div>
+    </div>
+  </section>
+
+  <section id="alerts" class="panel col">
+    <div class="toolbar"><select id="alertFilter"></select></div>
+    <div id="alertList" class="cards"></div>
+  </section>
+
+  <section id="zones" class="panel">
+    <aside class="side wide">
+      <div id="zoneForm">
+        <h3 data-i18n="newZone"></h3>
+        <p class="hint" data-i18n="zoneHint"></p>
+        <label><span data-i18n="name"></span><input id="gName" value="Zone 1" maxlength="120"></label>
+        <label><span data-i18n="radius"></span><input id="gRadius" type="number" value="200" min="50" max="50000"></label>
+        <label class="chk"><input type="checkbox" id="gEnter" checked> <span data-i18n="onEnter"></span></label>
+        <label class="chk"><input type="checkbox" id="gExit" checked> <span data-i18n="onExit"></span></label>
+        <label class="chk"><input type="checkbox" id="gCut"> <span data-i18n="cutOnExit"></span></label>
+        <label><span data-i18n="zoneSpeed"></span><input id="gSpeed" type="number" min="5" max="250" data-i18n-ph="optional"></label>
+        <button id="gSave" class="primary" data-i18n="save"></button>
+      </div>
+      <h3 data-i18n="zonesList"></h3>
+      <ul id="fenceList"></ul>
+    </aside>
+    <div class="mapwrap"><div id="map2"></div></div>
+  </section>
+
+  <section id="reports" class="panel col">
+    <div class="toolbar">
+      <select id="repVehicle"></select>
+      <select id="repPeriod">
+        <option value="1" data-i18n="day"></option><option value="7" data-i18n="week"></option><option value="30" data-i18n="month"></option>
+      </select>
+      <button id="repPrint" class="act" data-i18n="print"></button>
+    </div>
+    <div id="repCards" class="kpis"></div>
+  </section>
+
+  <section id="vehicles" class="panel col scroll">
+    <form id="vForm" class="formrow">
+      <input type="hidden" id="vId">
+      <input id="vName" data-i18n-ph="name" maxlength="120" required>
+      <input id="vPlate" data-i18n-ph="plate" maxlength="40">
+      <input id="vImei" data-i18n-ph="imei" maxlength="32" required>
+      <input id="vLimit" type="number" min="10" max="250" value="80" title="km/h">
+      <button class="primary" type="submit" data-i18n="save"></button>
+      <button class="act hidden" type="button" id="vCancel" data-i18n="cancel"></button>
+    </form>
+    <div id="devInfo" class="infobox hidden"></div>
+    <div id="vTable" class="tablewrap"></div>
+  </section>
+
+  <section id="users" class="panel col scroll">
+    <form id="uForm" class="formrow">
+      <input type="hidden" id="uId">
+      <input id="uName" data-i18n-ph="name" maxlength="120" required>
+      <input id="uEmail" type="email" placeholder="E-mail" maxlength="191" required>
+      <input id="uPw" type="password" data-i18n-ph="password8" autocomplete="new-password">
+      <select id="uRole"><option value="user" data-i18n="roleUser"></option><option value="company_admin" data-i18n="roleAdmin"></option></select>
+      <button class="primary" type="submit" data-i18n="save"></button>
+      <button class="act hidden" type="button" id="uCancel" data-i18n="cancel"></button>
+    </form>
+    <div id="uTable" class="tablewrap"></div>
+  </section>
+
+  <section id="companies" class="panel col scroll">
+    <form id="cForm" class="formrow">
+      <input id="cName" data-i18n-ph="company" maxlength="120" required>
+      <input id="cAdmin" data-i18n-ph="adminName" maxlength="120" required>
+      <input id="cEmail" type="email" data-i18n-ph="adminEmail" maxlength="191" required>
+      <input id="cPw" type="password" data-i18n-ph="adminPassword" autocomplete="new-password" required>
+      <button class="primary" type="submit" data-i18n="createCompany"></button>
+    </form>
+    <div id="cTable" class="tablewrap"></div>
+  </section>
+
+  <section id="account" class="panel col scroll">
+    <div class="formcard">
+      <h3 data-i18n="language"></h3>
+      <select id="langSel"><option value="fr">Français</option><option value="en">English</option></select>
+    </div>
+    <form id="pwForm" class="formcard">
+      <h3 data-i18n="changePw"></h3>
+      <input id="pwCur" type="password" data-i18n-ph="currentPw" autocomplete="current-password" required>
+      <input id="pwNew" type="password" data-i18n-ph="newPw" autocomplete="new-password" minlength="8" required>
+      <button class="primary" type="submit" data-i18n="save"></button>
+    </form>
+    <form id="brandForm" class="formcard hidden">
+      <h3 data-i18n="brand"></h3>
+      <input id="bName" data-i18n-ph="brandName" maxlength="120">
+      <label class="chk"><span data-i18n="brandColor"></span> <input id="bColor" type="color" value="#2563eb"></label>
+      <input id="bLogo" data-i18n-ph="logoUrl" maxlength="500">
+      <button class="primary" type="submit" data-i18n="save"></button>
+    </form>
+  </section>
+</main>
+
+<script src="/vendor/leaflet/leaflet.js"></script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

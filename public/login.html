@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrackFleet – Connexion</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="loginbody">
+<form id="f" class="logincard" autocomplete="on">
+  <div class="brand big">📍 TrackFleet</div>
+  <label><span data-i18n="email">E-mail</span><input id="email" type="email" required autocomplete="username"></label>
+  <label><span data-i18n="password">Mot de passe</span><input id="pw" type="password" required autocomplete="current-password"></label>
+  <div id="err" class="err hidden"></div>
+  <button class="primary" type="submit" data-i18n="signin">Se connecter</button>
+  <select id="lang" aria-label="Language"><option value="fr">Français</option><option value="en">English</option></select>
+</form>
+<script src="i18n.js"></script>
+<script src="login.js"></script>
+</body>
+</html>
