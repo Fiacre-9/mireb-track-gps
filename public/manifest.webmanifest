@@ -1,0 +1,35 @@
+{
+  "id": "/",
+  "name": "TrackFleet – Suivi GPS de flotte",
+  "short_name": "TrackFleet",
+  "description": "Suivi en temps réel des véhicules, alertes, géoclôtures, historique et rapports.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#edf0f5",
+  "theme_color": "#2563eb",
+  "categories": ["business", "navigation", "productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Alertes",
+      "short_name": "Alertes",
+      "url": "/?tab=alerts&source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Carte des véhicules",
+      "short_name": "Suivi",
+      "url": "/?tab=monitor&source=shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

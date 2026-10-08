@@ -1,6 +1,6 @@
 {
   "name": "trackfleet",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Plateforme de suivi GPS et gestion de flotte (Node.js, Express, MySQL)",
   "main": "server.js",
   "scripts": {

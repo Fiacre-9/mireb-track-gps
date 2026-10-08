@@ -31,7 +31,13 @@ const I18N = {
     a_sos: 'Bouton SOS', a_power_cut: 'Alimentation coupée', a_low_battery: 'Batterie faible', a_tamper: 'Boîtier démonté',
     lastCmd: 'Dernière commande', cmd_cut: 'Coupure', cmd_restore: 'Rétablissement',
     cmd_pending: 'en attente (envoi dès que possible)', cmd_sent: 'envoyée, attente de la réponse du boîtier', cmd_confirmed: 'confirmée par le boîtier',
-    cmd_failed: 'refusée par le boîtier', cmd_timeout: 'sans réponse du boîtier', cmd_expired: 'expirée'
+    cmd_failed: 'refusée par le boîtier', cmd_timeout: 'sans réponse du boîtier', cmd_expired: 'expirée',
+    menu: 'Menu', installApp: 'Installer l\'application', tagline: 'Suivi GPS de flotte en temps réel',
+    iosHint: 'Sur iPhone : touchez Partager, puis « Sur l\'écran d\'accueil ».',
+    offlineBar: 'Pas de connexion. Les données reviennent avec le réseau.', updateReady: 'Nouvelle version disponible', updateNow: 'Actualiser',
+    noVehicles: 'Aucun véhicule pour le moment.', noMatch: 'Aucun véhicule ne correspond.', noZones: 'Aucune géoclôture.',
+    loadError: 'Chargement impossible. Vérifiez la connexion.', retry: 'Réessayer', back: 'Retour', close: 'Fermer',
+    showList: 'Afficher la liste des véhicules', liveLink: 'Liaison temps réel', circuit: 'Circuit carburant', pause: 'Pause'
   },
   en: {
     app: 'TrackFleet', login: 'Sign in', email: 'Email', password: 'Password', signin: 'Sign in',
@@ -64,7 +70,13 @@ const I18N = {
     a_sos: 'SOS button', a_power_cut: 'Power cut', a_low_battery: 'Low battery', a_tamper: 'Device removed',
     lastCmd: 'Last command', cmd_cut: 'Cut', cmd_restore: 'Restore',
     cmd_pending: 'pending (sent as soon as possible)', cmd_sent: 'sent, waiting for the device reply', cmd_confirmed: 'confirmed by the device',
-    cmd_failed: 'rejected by the device', cmd_timeout: 'no reply from the device', cmd_expired: 'expired'
+    cmd_failed: 'rejected by the device', cmd_timeout: 'no reply from the device', cmd_expired: 'expired',
+    menu: 'Menu', installApp: 'Install the app', tagline: 'Real-time fleet GPS tracking',
+    iosHint: 'On iPhone: tap Share, then "Add to Home Screen".',
+    offlineBar: 'No connection. Data returns with the network.', updateReady: 'New version available', updateNow: 'Refresh',
+    noVehicles: 'No vehicles yet.', noMatch: 'No vehicle matches.', noZones: 'No geofences.',
+    loadError: 'Could not load. Check your connection.', retry: 'Retry', back: 'Back', close: 'Close',
+    showList: 'Show vehicle list', liveLink: 'Live link', circuit: 'Fuel circuit', pause: 'Pause'
   }
 };
 let LANG = localStorage.getItem('tf_lang') || ((navigator.language || 'fr').startsWith('en') ? 'en' : 'fr');
@@ -72,6 +84,10 @@ const t = (k) => (I18N[LANG] && I18N[LANG][k]) || I18N.fr[k] || k;
 function setLang(l) { LANG = I18N[l] ? l : 'fr'; localStorage.setItem('tf_lang', LANG); document.documentElement.lang = LANG; applyI18n(); }
 function applyI18n(root = document) {
   root.querySelectorAll('[data-i18n]').forEach((e) => { e.textContent = t(e.dataset.i18n); });
-  root.querySelectorAll('[data-i18n-ph]').forEach((e) => { e.placeholder = t(e.dataset.i18nPh); });
+  root.querySelectorAll('[data-i18n-ph]').forEach((e) => {
+    e.placeholder = t(e.dataset.i18nPh);
+    if (!e.hasAttribute('data-i18n-aria')) e.setAttribute('aria-label', e.placeholder);
+  });
+  root.querySelectorAll('[data-i18n-aria]').forEach((e) => { e.setAttribute('aria-label', t(e.dataset.i18nAria)); });
 }
 document.documentElement.lang = LANG;

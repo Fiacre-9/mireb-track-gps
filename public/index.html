@@ -2,139 +2,217 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>TrackFleet</title>
+<meta name="description" content="Suivi GPS de flotte en temps réel">
+<meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TrackFleet">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header>
-  <div class="brand"><img id="logo" class="hidden" alt=""><span id="brandName">📍 TrackFleet</span></div>
-  <nav id="nav">
-    <button class="tab" data-tab="monitor" data-i18n="monitor"></button>
-    <button class="tab" data-tab="alerts"><span data-i18n="alerts"></span> <span id="badge" class="badge hidden">0</span></button>
-    <button class="tab" data-tab="zones" data-i18n="zones"></button>
-    <button class="tab" data-tab="reports" data-i18n="reports"></button>
-    <button class="tab" data-tab="vehicles" data-roles="super_admin company_admin" data-i18n="vehicles"></button>
-    <button class="tab" data-tab="users" data-roles="super_admin company_admin" data-i18n="users"></button>
-    <button class="tab" data-tab="companies" data-roles="super_admin" data-i18n="companies"></button>
-    <button class="tab" data-tab="account" data-i18n="account"></button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-map" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-fence" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.6-3 8.2-7 10-4-1.8-7-5.4-7-10V6z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M8 16v-5M12 16V8M16 16v-8"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M4 17v-5l2-5h12l2 5v5z"/><path d="M4 12h16"/><circle cx="8" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M17 14c2.5 0 4 2 4 5"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><path d="M5 21V4h9v17M14 9h5v12M3 21h18"/><path d="M8.5 8h2M8.5 12h2M8.5 16h2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.8 3-6.5 7-6.5s7 2.7 7 6.5"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M10 4H5v16h5M15 8l4 4-4 4M19 12H9"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M14 5l-7 7 7 7"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v8M7 6.5a8 8 0 1 0 10 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></symbol>
+  <symbol id="i-pin-solid" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.5c-4.2 0-7.5 3.2-7.5 7.3 0 5.3 7.5 11.7 7.5 11.7s7.5-6.4 7.5-11.7c0-4.1-3.3-7.3-7.5-7.3zm0 4.3a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/></symbol>
+</svg>
+
+<div class="bars">
+  <div id="netbar" class="bar off" role="status" hidden><span data-i18n="offlineBar"></span></div>
+  <div id="updbar" class="bar" role="status" hidden><span data-i18n="updateReady"></span><button id="updBtn" class="bar-btn" data-i18n="updateNow"></button></div>
+</div>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <span class="mark"><svg class="i fill" aria-hidden="true"><use href="#i-pin-solid"/></svg></span>
+      <img id="logo" class="hidden" alt="">
+      <span id="brandName">TrackFleet</span>
+    </div>
+    <select id="companySel" class="hidden" data-i18n-aria="company"></select>
+    <span id="conn" class="conn off" role="img" data-i18n-aria="liveLink"></span>
+    <button class="icon-btn only-wide" data-act="install" hidden data-i18n-aria="installApp"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg></button>
+    <button id="logout" class="icon-btn" data-i18n-aria="logout"><svg class="i" aria-hidden="true"><use href="#i-logout"/></svg></button>
+  </header>
+
+  <nav id="nav" class="nav" aria-label="Navigation">
+    <button class="tab" data-act="tab" data-tab="monitor"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-map"/></svg></span><span class="tl" data-i18n="monitor"></span></button>
+    <button class="tab" data-act="tab" data-tab="alerts"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-bell"/></svg><span id="badge" class="badge hidden">0</span></span><span class="tl" data-i18n="alerts"></span></button>
+    <button class="tab sec" data-act="tab" data-tab="zones"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-fence"/></svg></span><span class="tl" data-i18n="zones"></span></button>
+    <button class="tab sec" data-act="tab" data-tab="reports"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg></span><span class="tl" data-i18n="reports"></span></button>
+    <button class="tab sec" data-act="tab" data-tab="vehicles" data-roles="super_admin company_admin"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-car"/></svg></span><span class="tl" data-i18n="vehicles"></span></button>
+    <button class="tab sec" data-act="tab" data-tab="users" data-roles="super_admin company_admin"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg></span><span class="tl" data-i18n="users"></span></button>
+    <button class="tab sec" data-act="tab" data-tab="companies" data-roles="super_admin"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-building"/></svg></span><span class="tl" data-i18n="companies"></span></button>
+    <button class="tab sec" data-act="tab" data-tab="account"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg></span><span class="tl" data-i18n="account"></span></button>
+    <button class="tab only-narrow" data-act="tab" data-tab="menu"><span class="ti"><svg class="i" aria-hidden="true"><use href="#i-grid"/></svg></span><span class="tl" data-i18n="menu"></span></button>
   </nav>
-  <select id="companySel" class="hidden" aria-label="Entreprise"></select>
-  <div id="conn" class="conn off">●</div>
-  <button id="logout" class="act" data-i18n="logout"></button>
-</header>
-<div id="toast" class="toast hidden"></div>
 
-<main>
-  <section id="monitor" class="panel">
-    <aside class="side">
-      <input id="search" data-i18n-ph="search">
-      <div class="stats" id="stats"></div>
-      <ul id="vlist"></ul>
-    </aside>
-    <div class="mapwrap">
-      <div id="map"></div>
-      <div id="detail" class="detail hidden"></div>
+  <main>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+    <div id="bootErr" class="booterr" hidden>
+      <p id="bootMsg"></p>
+      <button class="btn primary" data-act="reload" data-i18n="retry"></button>
     </div>
-  </section>
 
-  <section id="alerts" class="panel col">
-    <div class="toolbar"><select id="alertFilter"></select></div>
-    <div id="alertList" class="cards"></div>
-  </section>
+    <div id="pagehead" class="pagehead">
+      <button class="icon-btn back" data-act="toMenu" data-i18n-aria="back"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg></button>
+      <h1 id="pageTitle"></h1>
+    </div>
 
-  <section id="zones" class="panel">
-    <aside class="side wide">
-      <div id="zoneForm">
-        <h3 data-i18n="newZone"></h3>
-        <p class="hint" data-i18n="zoneHint"></p>
-        <label><span data-i18n="name"></span><input id="gName" value="Zone 1" maxlength="120"></label>
-        <label><span data-i18n="radius"></span><input id="gRadius" type="number" value="200" min="50" max="50000"></label>
-        <label class="chk"><input type="checkbox" id="gEnter" checked> <span data-i18n="onEnter"></span></label>
-        <label class="chk"><input type="checkbox" id="gExit" checked> <span data-i18n="onExit"></span></label>
-        <label class="chk"><input type="checkbox" id="gCut"> <span data-i18n="cutOnExit"></span></label>
-        <label><span data-i18n="zoneSpeed"></span><input id="gSpeed" type="number" min="5" max="250" data-i18n-ph="optional"></label>
-        <button id="gSave" class="primary" data-i18n="save"></button>
+    <section id="monitor" class="panel">
+      <div class="mapwrap">
+        <div id="map"></div>
+        <div id="detail" class="detail hidden"></div>
       </div>
-      <h3 data-i18n="zonesList"></h3>
-      <ul id="fenceList"></ul>
-    </aside>
-    <div class="mapwrap"><div id="map2"></div></div>
-  </section>
+      <div id="sheet" class="sheet">
+        <button id="sheetHandle" class="handle" data-act="sheet" aria-expanded="false" data-i18n-aria="showList"><span class="grab"></span></button>
+        <div class="stats" id="stats"></div>
+        <div class="sheet-body">
+          <label class="search"><svg class="i" aria-hidden="true"><use href="#i-search"/></svg><input id="search" type="search" data-i18n-ph="search" autocomplete="off"></label>
+          <div id="vlist" class="vgrid"></div>
+        </div>
+      </div>
+    </section>
 
-  <section id="reports" class="panel col">
-    <div class="toolbar">
-      <select id="repVehicle"></select>
-      <select id="repPeriod">
-        <option value="1" data-i18n="day"></option><option value="7" data-i18n="week"></option><option value="30" data-i18n="month"></option>
-      </select>
-      <button id="repPrint" class="act" data-i18n="print"></button>
-    </div>
-    <div id="repCards" class="kpis"></div>
-  </section>
+    <section id="menu" class="panel page">
+      <div class="tiles">
+        <button class="tile" data-act="tab" data-tab="zones"><svg class="i" aria-hidden="true"><use href="#i-fence"/></svg><span data-i18n="zones"></span></button>
+        <button class="tile" data-act="tab" data-tab="reports"><svg class="i" aria-hidden="true"><use href="#i-chart"/></svg><span data-i18n="reports"></span></button>
+        <button class="tile" data-act="tab" data-tab="vehicles" data-roles="super_admin company_admin"><svg class="i" aria-hidden="true"><use href="#i-car"/></svg><span data-i18n="vehicles"></span></button>
+        <button class="tile" data-act="tab" data-tab="users" data-roles="super_admin company_admin"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg><span data-i18n="users"></span></button>
+        <button class="tile" data-act="tab" data-tab="companies" data-roles="super_admin"><svg class="i" aria-hidden="true"><use href="#i-building"/></svg><span data-i18n="companies"></span></button>
+        <button class="tile" data-act="tab" data-tab="account"><svg class="i" aria-hidden="true"><use href="#i-user"/></svg><span data-i18n="account"></span></button>
+        <button class="tile accent" data-act="install" hidden><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span data-i18n="installApp"></span></button>
+      </div>
+    </section>
 
-  <section id="vehicles" class="panel col scroll">
-    <form id="vForm" class="formrow">
-      <input type="hidden" id="vId">
-      <input id="vName" data-i18n-ph="name" maxlength="120" required>
-      <input id="vPlate" data-i18n-ph="plate" maxlength="40">
-      <input id="vImei" data-i18n-ph="imei" maxlength="32" required>
-      <input id="vLimit" type="number" min="10" max="250" value="80" title="km/h">
-      <button class="primary" type="submit" data-i18n="save"></button>
-      <button class="act hidden" type="button" id="vCancel" data-i18n="cancel"></button>
-    </form>
-    <div id="devInfo" class="infobox hidden"></div>
-    <div id="vTable" class="tablewrap"></div>
-  </section>
+    <section id="alerts" class="panel page">
+      <div class="toolbar"><select id="alertFilter" data-i18n-aria="alerts"></select></div>
+      <div id="alertList" class="cards"></div>
+    </section>
 
-  <section id="users" class="panel col scroll">
-    <form id="uForm" class="formrow">
-      <input type="hidden" id="uId">
-      <input id="uName" data-i18n-ph="name" maxlength="120" required>
-      <input id="uEmail" type="email" placeholder="E-mail" maxlength="191" required>
-      <input id="uPw" type="password" data-i18n-ph="password8" autocomplete="new-password">
-      <select id="uRole"><option value="user" data-i18n="roleUser"></option><option value="company_admin" data-i18n="roleAdmin"></option></select>
-      <button class="primary" type="submit" data-i18n="save"></button>
-      <button class="act hidden" type="button" id="uCancel" data-i18n="cancel"></button>
-    </form>
-    <div id="uTable" class="tablewrap"></div>
-  </section>
+    <section id="zones" class="panel maps">
+      <aside class="side">
+        <div id="zoneForm" class="formcard">
+          <h2 data-i18n="newZone"></h2>
+          <p class="hint" data-i18n="zoneHint"></p>
+          <label><span data-i18n="name"></span><input id="gName" value="Zone 1" maxlength="120"></label>
+          <label><span data-i18n="radius"></span><input id="gRadius" type="number" inputmode="numeric" value="200" min="50" max="50000"></label>
+          <label class="chk"><input type="checkbox" id="gEnter" checked><span data-i18n="onEnter"></span></label>
+          <label class="chk"><input type="checkbox" id="gExit" checked><span data-i18n="onExit"></span></label>
+          <label class="chk"><input type="checkbox" id="gCut"><span data-i18n="cutOnExit"></span></label>
+          <label><span data-i18n="zoneSpeed"></span><input id="gSpeed" type="number" inputmode="numeric" min="5" max="250" data-i18n-ph="optional"></label>
+          <button id="gSave" class="btn primary" data-i18n="save"></button>
+        </div>
+        <h2 class="sec" data-i18n="zonesList"></h2>
+        <div id="fenceList" class="recs"></div>
+      </aside>
+      <div class="mapwrap"><div id="map2"></div></div>
+    </section>
 
-  <section id="companies" class="panel col scroll">
-    <form id="cForm" class="formrow">
-      <input id="cName" data-i18n-ph="company" maxlength="120" required>
-      <input id="cAdmin" data-i18n-ph="adminName" maxlength="120" required>
-      <input id="cEmail" type="email" data-i18n-ph="adminEmail" maxlength="191" required>
-      <input id="cPw" type="password" data-i18n-ph="adminPassword" autocomplete="new-password" required>
-      <button class="primary" type="submit" data-i18n="createCompany"></button>
-    </form>
-    <div id="cTable" class="tablewrap"></div>
-  </section>
+    <section id="reports" class="panel page">
+      <div class="toolbar">
+        <select id="repVehicle" data-i18n-aria="vehicles"></select>
+        <select id="repPeriod" data-i18n-aria="period">
+          <option value="1" data-i18n="day"></option><option value="7" data-i18n="week"></option><option value="30" data-i18n="month"></option>
+        </select>
+        <button id="repPrint" class="btn" data-i18n="print"></button>
+      </div>
+      <div id="repCards" class="kpis"></div>
+    </section>
 
-  <section id="account" class="panel col scroll">
-    <div class="formcard">
-      <h3 data-i18n="language"></h3>
-      <select id="langSel"><option value="fr">Français</option><option value="en">English</option></select>
-    </div>
-    <form id="pwForm" class="formcard">
-      <h3 data-i18n="changePw"></h3>
-      <input id="pwCur" type="password" data-i18n-ph="currentPw" autocomplete="current-password" required>
-      <input id="pwNew" type="password" data-i18n-ph="newPw" autocomplete="new-password" minlength="8" required>
-      <button class="primary" type="submit" data-i18n="save"></button>
-    </form>
-    <form id="brandForm" class="formcard hidden">
-      <h3 data-i18n="brand"></h3>
-      <input id="bName" data-i18n-ph="brandName" maxlength="120">
-      <label class="chk"><span data-i18n="brandColor"></span> <input id="bColor" type="color" value="#2563eb"></label>
-      <input id="bLogo" data-i18n-ph="logoUrl" maxlength="500">
-      <button class="primary" type="submit" data-i18n="save"></button>
-    </form>
-  </section>
-</main>
+    <section id="vehicles" class="panel page">
+      <form id="vForm" class="formcard fgrid">
+        <input type="hidden" id="vId">
+        <input id="vName" data-i18n-ph="name" maxlength="120" required>
+        <input id="vPlate" data-i18n-ph="plate" maxlength="40">
+        <input id="vImei" data-i18n-ph="imei" maxlength="32" required>
+        <input id="vLimit" type="number" inputmode="numeric" min="10" max="250" value="80" data-i18n-ph="speedLimit">
+        <div class="fbtns">
+          <button class="btn primary" type="submit" data-i18n="save"></button>
+          <button class="btn hidden" type="button" id="vCancel" data-i18n="cancel"></button>
+        </div>
+      </form>
+      <div id="devInfo" class="infobox hidden"></div>
+      <div id="vTable" class="recs"></div>
+    </section>
+
+    <section id="users" class="panel page">
+      <form id="uForm" class="formcard fgrid">
+        <input type="hidden" id="uId">
+        <input id="uName" data-i18n-ph="name" maxlength="120" required>
+        <input id="uEmail" type="email" placeholder="E-mail" aria-label="E-mail" maxlength="191" required>
+        <input id="uPw" type="password" data-i18n-ph="password8" autocomplete="new-password">
+        <select id="uRole" data-i18n-aria="role"><option value="user" data-i18n="roleUser"></option><option value="company_admin" data-i18n="roleAdmin"></option></select>
+        <div class="fbtns">
+          <button class="btn primary" type="submit" data-i18n="save"></button>
+          <button class="btn hidden" type="button" id="uCancel" data-i18n="cancel"></button>
+        </div>
+      </form>
+      <div id="uTable" class="recs"></div>
+    </section>
+
+    <section id="companies" class="panel page">
+      <form id="cForm" class="formcard fgrid">
+        <input id="cName" data-i18n-ph="company" maxlength="120" required>
+        <input id="cAdmin" data-i18n-ph="adminName" maxlength="120" required>
+        <input id="cEmail" type="email" data-i18n-ph="adminEmail" maxlength="191" required>
+        <input id="cPw" type="password" data-i18n-ph="adminPassword" autocomplete="new-password" required>
+        <div class="fbtns"><button class="btn primary" type="submit" data-i18n="createCompany"></button></div>
+      </form>
+      <div id="cTable" class="recs"></div>
+    </section>
+
+    <section id="account" class="panel page">
+      <div class="cols">
+        <div class="formcard">
+          <h2 data-i18n="language"></h2>
+          <select id="langSel" data-i18n-aria="language"><option value="fr">Français</option><option value="en">English</option></select>
+        </div>
+        <form id="pwForm" class="formcard">
+          <h2 data-i18n="changePw"></h2>
+          <input id="pwCur" type="password" data-i18n-ph="currentPw" autocomplete="current-password" required>
+          <input id="pwNew" type="password" data-i18n-ph="newPw" autocomplete="new-password" minlength="8" required>
+          <button class="btn primary" type="submit" data-i18n="save"></button>
+        </form>
+        <form id="brandForm" class="formcard hidden">
+          <h2 data-i18n="brand"></h2>
+          <input id="bName" data-i18n-ph="brandName" maxlength="120">
+          <label class="chk"><span data-i18n="brandColor"></span><input id="bColor" type="color" value="#2563eb"></label>
+          <input id="bLogo" data-i18n-ph="logoUrl" maxlength="500">
+          <button class="btn primary" type="submit" data-i18n="save"></button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
 
 <script src="/vendor/leaflet/leaflet.js"></script>
-<script src="i18n.js"></script>
-<script src="app.js"></script>
+<script src="/pwa.js"></script>
+<script src="/i18n.js"></script>
+<script src="/app.js"></script>
 </body>
 </html>

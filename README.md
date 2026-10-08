@@ -90,3 +90,11 @@ Il démarre quand `GT06_PORT` est défini (ex. `5023`).
 - **Vidéo en direct** : non incluse.
 - **Géoclôtures** : cercles uniquement.
 - Le chemin MySQL n'a pas pu être testé automatiquement ici (SQLite utilisé) : vérifier le premier démarrage sur la base vide.
+
+## Application installable (PWA)
+
+L'interface est une PWA : sur téléphone, ouvrir le site puis « Installer l'application » (Android/Chrome) ou Partager > « Sur l'écran d'accueil » (iPhone). Elle s'ouvre alors en plein écran, avec une barre de navigation en bas (Suivi, Alertes, Menu) et une grille de véhicules.
+
+- `public/manifest.webmanifest` : nom, icônes, mode plein écran.
+- `public/sw.js` : service worker. Le serveur y injecte un identifiant de version à chaque déploiement (le cache se renouvelle seul). L'API et les tuiles de carte ne sont jamais mises en cache.
+- Icônes : `npm i --no-save sharp && node scripts/make-icons.js`.
