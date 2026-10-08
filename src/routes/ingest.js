@@ -10,7 +10,8 @@ const r = express.Router();
 const handle = asyncH(async (req, res) => {
   const q = { ...req.query, ...req.body };
   const imei = str(String(q.id ?? q.deviceid ?? ''), 32);
-  const token = String(q.token ?? '');
+  // Le jeton peut être dans le chemin (/osmand/JETON, le plus simple pour Traccar Client) ou en paramètre ?token=
+  const token = String(req.params.token ?? q.token ?? '');
   const v = imei ? await db.get('SELECT v.*, c.status AS company_status FROM vehicles v JOIN companies c ON c.id = v.company_id WHERE v.imei = ?', [imei]) : null;
   if (!v || !safeEqual(v.token, token)) return res.status(401).json({ error: 'Appareil non autorisé' });
   if (v.company_status !== 'active') return res.status(403).json({ error: 'Entreprise suspendue' });
@@ -32,6 +33,6 @@ const handle = asyncH(async (req, res) => {
   res.json({ ok: true });
 });
 
-r.get('/osmand', handle);
-r.post('/osmand', handle);
+r.get(['/osmand', '/osmand/:token'], handle);
+r.post(['/osmand', '/osmand/:token'], handle);
 module.exports = r;

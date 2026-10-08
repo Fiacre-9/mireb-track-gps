@@ -398,7 +398,7 @@ document.addEventListener('click', guard(async (e) => {
     case 'vDel': if (confirm(t('confirmDelete'))) { await api('/vehicles/' + id, { method: 'DELETE' }); await loadVehicleTable(); } break;
     case 'vConn': {
       const v = await api('/vehicles/' + id);
-      const url = `${location.origin}/api/ingest/osmand?token=${v.token}`;
+      const url = `${location.origin}/api/ingest/osmand/${v.token}`;
       const box = $('#devInfo'); box.classList.remove('hidden');
       box.innerHTML = `<p>${esc(t('deviceHelp'))}<br><code>${esc(url)}</code> <button class="act" data-act="copy" data-text="${esc(url)}">${esc(t('copy'))}</button></p>
         <p>${esc(t('deviceId'))} <code>${esc(v.imei)}</code></p>`;

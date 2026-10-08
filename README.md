@@ -47,10 +47,12 @@ Les identifiants du compte démo et du super admin s'affichent dans la console a
 
 Onglet **Véhicules → Connexion** : l'application affiche l'URL et l'identifiant à saisir. Chaque véhicule a son propre jeton.
 
-- **Application Traccar Client** (Android/iOS) : URL du serveur `https://votre-domaine/api/ingest/osmand?token=JETON`,
-  identifiant de l'appareil = IMEI/identifiant du véhicule.
-- **Boîtiers 4G configurables en HTTP** : requête `GET/POST /api/ingest/osmand` avec `id`, `token`, `lat`, `lon`,
-  et en option `speed` (nœuds, ou km/h avec `unit=kmh`), `bearing`, `timestamp`, `ignition`, `fuel`, `temp`.
+- **Sans aucun boîtier : un smartphone suffit** (idéal pour tester ou pour un premier véhicule). Installez l'application
+  gratuite **Traccar Client** (Android/iOS), puis : *URL du serveur* = `https://votre-domaine/api/ingest/osmand/JETON`
+  (l'onglet Véhicules → Connexion l'affiche), *Identifiant de l'appareil* = l'identifiant du véhicule, fréquence 10-30 s.
+  Fonctionne sur l'hébergement Hostinger mutualisé, sans VPS.
+- **Boîtiers 4G configurables en HTTP** : requête `GET/POST /api/ingest/osmand/JETON` (ou `/api/ingest/osmand?token=JETON`)
+  avec `id`, `lat`, `lon`, et en option `speed` (nœuds, ou km/h avec `unit=kmh`), `bearing`, `timestamp`, `ignition`, `fuel`, `temp`.
 
 ## Boîtiers GPS GT06 (TCP) sur un VPS
 
